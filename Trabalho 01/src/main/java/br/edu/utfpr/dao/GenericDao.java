@@ -16,12 +16,20 @@ public class GenericDao<T> {
 
     public void inserir(T entity) {
         EntityTransaction tx = em.getTransaction();
+        boolean criadorDaTransacao = false;
         try {
-            tx.begin();
+            if (!tx.isActive()) {
+                tx.begin();
+                criadorDaTransacao = true;
+            }
+
             em.persist(entity);
-            tx.commit();
+
+            if (criadorDaTransacao) {
+                tx.commit();
+            }
         } catch (Exception e) {
-            if (tx.isActive()) {
+            if (criadorDaTransacao && tx.isActive()) {
                 tx.rollback();
             }
             throw new RuntimeException("Erro ao inserir: " + e.getMessage(), e);
@@ -30,12 +38,20 @@ public class GenericDao<T> {
 
     public void atualizar(T entity) {
         EntityTransaction tx = em.getTransaction();
+        boolean criadorDaTransacao = false;
         try {
-            tx.begin();
+            if (!tx.isActive()) {
+                tx.begin();
+                criadorDaTransacao = true;
+            }
+
             em.merge(entity);
-            tx.commit();
+
+            if (criadorDaTransacao) {
+                tx.commit();
+            }
         } catch (Exception e) {
-            if (tx.isActive()) {
+            if (criadorDaTransacao && tx.isActive()) {
                 tx.rollback();
             }
             throw new RuntimeException("Erro ao atualizar: " + e.getMessage(), e);
@@ -44,15 +60,23 @@ public class GenericDao<T> {
 
     public void remover(Long id) {
         EntityTransaction tx = em.getTransaction();
+        boolean criadorDaTransacao = false;
         try {
-            tx.begin();
+            if (!tx.isActive()) {
+                tx.begin();
+                criadorDaTransacao = true;
+            }
+
             T entity = em.find(entityClass, id);
             if (entity != null) {
                 em.remove(entity);
             }
-            tx.commit();
+
+            if (criadorDaTransacao) {
+                tx.commit();
+            }
         } catch (Exception e) {
-            if (tx.isActive()) {
+            if (criadorDaTransacao && tx.isActive()) {
                 tx.rollback();
             }
             throw new RuntimeException("Erro ao remover: " + e.getMessage(), e);
